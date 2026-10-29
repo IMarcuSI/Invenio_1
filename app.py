@@ -1,28 +1,28 @@
 import streamlit as st
-from groq import Groq
+import google.generativeai as genai
 from docx import Document
 from PIL import Image
 import io
-import base64
 
-# Configuracion de la interfaz
+# Configuracion de la pagina
 st.set_page_config(page_title="Digitalizador de Informes", layout="centered")
 
 st.title("Digitalizador Automatico de Informes")
 st.write("Sube una o varias fotos del documento para convertirlas a un archivo Word editable.")
 
-# Gestion de la clave API con limpieza de espacios
-if "GROQ_API_KEY" in st.secrets:
-    api_key = st.secrets["GROQ_API_KEY"].strip()
+# Gestion de la clave API con sanitizacion (elimina espacios no deseados)
+if "GEMINI_API_KEY" in st.secrets:
+    api_key = st.secrets["GEMINI_API_KEY"].strip()
 else:
-    api_key = st.sidebar.text_input("Ingresa tu Groq API Key:", type="password").strip()
+    api_key = st.sidebar.text_input("Ingresa tu Gemini API Key:", type="password").strip()
 
 if not api_key:
-    st.info("Por favor, configura la API Key de Groq para continuar.")
+    st.info("Por favor, configura la API Key en los Secrets de Streamlit o ingresala en la barra lateral para continuar.")
     st.stop()
 
-# Inicializar cliente de Groq
-client = Groq(api_key=api_key)
+# Configurar cliente y seleccionar modelo ligero activo
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-3.5-flash-lite')
 
 # Carga de archivos
 archivos = st.file_uploader("Selecciona la(s) imagen(es) del papel", type=["jpg", "png", "jpeg"], accept_multiple_files=True)
@@ -41,44 +41,27 @@ if archivos and st.button("Procesar y Generar Word", type="primary"):
         estado_texto.text(f"Procesando imagen {idx} de {total_archivos}: {archivo.name}")
         
         try:
-            # Procesar imagen, convertir a RGB y ajustar tamano
+            # Sanitizacion de la imagen: convertir obligatoriamente a RGB y redimensionar
             img = Image.open(archivo).convert('RGB')
             img.thumbnail((2048, 2048))
             
-            # Guardar en buffer en formato JPEG
-            buffer_img = io.BytesIO()
-            img.save(buffer_img, format="JPEG")
-            base64_image = base64.b64encode(buffer_img.getvalue()).decode('utf-8')
-
-            # Llamada al modelo actualizado de Groq
-            response = client.chat.completions.create(
-                model="llama-3.2-11b-vision-instruct",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text", 
-                                "text": "Analiza esta imagen minuciosamente. Transcribe y organiza toda la informacion visible usando formato Markdown (# para titulos, - para listas con vinetas)."
-                            },
-                            {
-                                "type": "image_url", 
-                                "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                            }
-                        ]
-                    }
-                ]
-            )
-
-            texto_resultado = response.choices[0].message.content
-
-            if texto_resultado and texto_resultado.strip():
+            prompt = """
+            Analiza esta imagen minuciosamente. Transcribe y organiza toda la informacion visible.
+            Usa formato Markdown estructurado:
+            - Usa titulos (# o ##) para los encabezados principales o secciones.
+            - Usa listas con vinetas (-) para detalles, observaciones o puntos clave.
+            - Transcribe fielmente nombres, numeros, fechas y textos.
+            """
+            
+            response = model.generate_content([prompt, img])
+            
+            if response and response.text and response.text.strip():
                 contenido_extraido = True
                 
                 if total_archivos > 1:
                     doc.add_heading(f"Documento / Pagina {idx}", level=2)
                 
-                lineas = texto_resultado.split('\n')
+                lineas = response.text.split('\n')
                 for linea in lineas:
                     l = linea.strip()
                     if l.startswith('# '):
