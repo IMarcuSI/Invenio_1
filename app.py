@@ -7,7 +7,7 @@ import io
 # Configuración de la interfaz
 st.set_page_config(page_title="Digitalizador de Informes", page_icon="📄", layout="centered")
 
-st.title("📄 Digitalizador Automático de Informes")
+st.title("Digitalizador Automático de Informes")
 st.write("Sube una o varias fotos del documento para convertirlas a un archivo Word editable.")
 
 # Gestión de la clave API (desde Secrets de Streamlit o entrada manual)
@@ -17,7 +17,7 @@ else:
     api_key = st.sidebar.text_input("Ingresa tu Gemini API Key:", type="password")
 
 if not api_key:
-    st.info("💡 Por favor, configura la API Key en los Secrets de Streamlit o ingrésala en la barra lateral para continuar.")
+    st.info("Por favor, configura la API Key en los Secrets de Streamlit o ingrésala en la barra lateral para continuar.")
     st.stop()
 
 # Configurar el cliente de IA
@@ -74,7 +74,7 @@ if archivos and st.button("Procesar y Generar Word", type="primary"):
 
         st.success("¡Documento procesado con éxito!")
         st.download_button(
-            label="📥 Descargar Documento Word (.docx)",
+            label="Descargar Documento Word (.docx)",
             data=buffer,
             file_name="Informe_Digitalizado.docx",
             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
