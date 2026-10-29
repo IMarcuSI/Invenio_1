@@ -30,7 +30,7 @@ if not api_key:
 
 # Configurar el cliente de IA (Se ajusta a gemini-1.5-flash)
 genai.configure(api_key=api_key)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # Carga de archivos
 archivos = st.file_uploader(
