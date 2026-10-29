@@ -12,7 +12,7 @@ st.write("Sube una o varias fotos del documento para convertirlas a un archivo W
 
 # Gestión de la clave API (desde Secrets de Streamlit o entrada manual)
 if "GEMINI_API_KEY" in st.secrets:
-    api_key = st.secrets["GEMINI_API_KEY"]
+    api_key = st.secrets["AQ.Ab8RN6KymVSi_aj94KQeVsUI4UjTSIXuwhA4xVRxjxmjVawa1Q"]
 else:
     api_key = st.sidebar.text_input("Ingresa tu Gemini API Key:", type="password")
 
